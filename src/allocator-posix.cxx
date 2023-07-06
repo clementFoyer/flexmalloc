@@ -13,7 +13,7 @@
 #define ALLOCATOR_NAME "posix"
 
 AllocatorPOSIX::AllocatorPOSIX (allocation_functions_t &af)
-  : Allocator (af)
+  : StatisticsRecorderAllocator (af)
 {
 }
 
@@ -213,12 +213,3 @@ const char * AllocatorPOSIX::description (void) const
 	return "Fallback allocator based on regular POSIX calls from system's libc";
 }
 
-void AllocatorPOSIX::show_statistics (void) const
-{
-	_stats.show_statistics (ALLOCATOR_NAME, true);
-}
-
-bool AllocatorPOSIX::fits (size_t s) const
-{
-	return _stats.water_mark() + s <= this->size();
-}

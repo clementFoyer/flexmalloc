@@ -5,8 +5,8 @@
 #pragma once
 
 #include <assert.h>
+#include <string.h>
 #include "common.hxx"
-#include "allocator-statistics.hxx"
 
 class Allocator
 {

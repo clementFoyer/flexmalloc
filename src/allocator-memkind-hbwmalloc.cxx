@@ -15,7 +15,7 @@
 #define ALLOCATOR_NAME "memkind/hbwmalloc"
 
 AllocatorMemkindHBWMalloc::AllocatorMemkindHBWMalloc (allocation_functions_t &af)
-  : Allocator (af)
+  : StatisticsRecorderAllocator (af)
 {
 	hbw_set_policy (HBW_POLICY_PREFERRED);
 }
@@ -218,12 +218,3 @@ const char * AllocatorMemkindHBWMalloc::description (void) const
 	return "Allocator based on hbwmalloc on top of memkind";
 }
 
-void AllocatorMemkindHBWMalloc::show_statistics (void) const
-{
-	_stats.show_statistics (ALLOCATOR_NAME, true);
-}
-
-bool AllocatorMemkindHBWMalloc::fits (size_t s) const
-{
-	return _stats.water_mark() + s <= this->size();
-}

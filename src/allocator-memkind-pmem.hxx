@@ -36,7 +36,7 @@ class AllocatorMemkindPMEM final : public Allocator
 	void   configure (const char *);
 	const char * name (void) const;
 	const char * description (void) const;
-	void show_statistics (void) const;
+	void show_statistics (void) const override;
 
 	void *memcpy (void *dest, const void *src, size_t n)
 	  {
@@ -47,8 +47,8 @@ class AllocatorMemkindPMEM final : public Allocator
 #endif
 	  }
 
-	bool fits (size_t s) const;
-	size_t hwm (void) const;
+	bool fits (size_t s) const override;
+	size_t hwm (void) const override;
 	void record_unfitted_malloc (size_t s);
 	void record_unfitted_calloc (size_t s);
 	void record_unfitted_aligned_malloc (size_t s);
