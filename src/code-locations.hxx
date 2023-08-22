@@ -99,5 +99,10 @@ class CodeLocations
 	unsigned max_nframes (void) const { return _max_nframes; };
 	unsigned has_locations (void) const { return _nlocations > 0; };
 	Allocator * allocator (unsigned cl) const { return cl <= _nlocations ? _locations[cl].allocator : nullptr; };
+
+	static constexpr char ALLOCATOR_MARKER = '@';
+	static constexpr char FRAME_MARKER = '>';
+	static constexpr char OFFSET_MARKER = '!';
+	static constexpr char LINE_MARKER = ':';
 };
 

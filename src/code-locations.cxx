@@ -45,7 +45,7 @@ bool CodeLocations::comparator_by_NumberOfFrames (const location_t &lhs, const l
 char * CodeLocations::find_and_set_allocator (char *location_txt, location_t * location, const char * fallback_allocator_name)
 {
 	// Make sure it contains a @ symbol
-	char *allocator_marker = strchr (location_txt, '@');
+	char *allocator_marker = strchr (location_txt, ALLOCATOR_MARKER);
 	if (allocator_marker == nullptr)
 	{
 		VERBOSE_MSG(0, "Error! Cannot find allocator marker.\n");
@@ -143,19 +143,20 @@ bool CodeLocations::process_source_location (char *location_txt, location_t * lo
 	if (allocator_marker == nullptr) // forward error
 		return false;
 
-	count_frames (location_txt, location, allocator_marker, ':');
+	count_frames (location_txt, location, allocator_marker, LINE_MARKER);
 	assert(location->nframes > 0);
 
-	location->frames.source = (source_frame_t*) _af.realloc (nullptr, sizeof(source_frame_t)*location->nframes);
+	location->frames.source = (source_frame_t*) _af.realloc (nullptr, sizeof(source_frame_t[location->nframes]));
 	assert (location->frames.source != nullptr);
+	memset (location->frames.source, 0, sizeof(source_frame_t[location->nframes]));
 
 	// Process the frames for this location
 	char * prev_frame = location_txt;
-	char * frame = strchr (location_txt, ':');
-	for (size_t f = 0; f < location->nframes && frame != nullptr; ++f)
+	char * line = strchr (location_txt, LINE_MARKER);
+	for (size_t f = 0; f < location->nframes && line != nullptr; ++f)
 	{
 		char file[PATH_MAX] = {0};
-		size_t file_len = std::min (frame-prev_frame, (std::ptrdiff_t) PATH_MAX-1);
+		size_t file_len = std::min (line-prev_frame, (std::ptrdiff_t) PATH_MAX-1);
 		memcpy (file, prev_frame, file_len);
 		file[file_len] = '\0';
 		if (options.compareWholePath())
@@ -164,7 +165,7 @@ bool CodeLocations::process_source_location (char *location_txt, location_t * lo
 			snprintf (location->frames.source[f].file, PATH_MAX, "%s", basename(file));
 
 		char *endptr;
-		location->frames.source[f].line = (unsigned) strtol (frame+1, &endptr, 10);
+		location->frames.source[f].line = (unsigned) strtol (line+1, &endptr, 10);
 
 		// Frames is valid only if it is not unresolved / not found and line
 		// makes sense (not 0)
@@ -176,8 +177,8 @@ bool CodeLocations::process_source_location (char *location_txt, location_t * lo
 		DBG("Frame %zu - File = '%s' Line = %u Valid = %d\n", f,
 		  location->frames.source[f].file, location->frames.source[f].line, location->frames.source[f].valid );
 
-		prev_frame = strchr (endptr, '>') + 2;
-		frame = strchr (endptr, ':');
+		prev_frame = strchr (endptr, FRAME_MARKER) + 2;
+		line = strchr (endptr, LINE_MARKER);
 	}
 
 	return true;
@@ -269,25 +270,26 @@ bool CodeLocations::process_raw_location (char *location_txt, location_t * locat
 	if (allocator_marker == nullptr) // forward error
 		return false;
 
-	count_frames (location_txt, location, allocator_marker, '!');
+	count_frames (location_txt, location, allocator_marker, OFFSET_MARKER);
 	assert(location->nframes > 0);
 
-	location->frames.raw = (raw_frame_t*) _af.realloc (nullptr, sizeof(raw_frame_t)*location->nframes);
+	location->frames.raw = (raw_frame_t*) _af.realloc (nullptr, sizeof(raw_frame_t[location->nframes]));
 	assert (location->frames.raw != nullptr);
+	memset (location->frames.raw, 0, sizeof(raw_frame_t[location->nframes]));
 
 	// Process the frames for this location
 	char * prev_frame = location_txt;
-	char * frame = strchr (location_txt, '!');
-	for (size_t f = 0; f < location->nframes && frame != nullptr; ++f)
+	char * offset = strchr (location_txt, OFFSET_MARKER);
+	for (size_t f = 0; f < location->nframes && offset != nullptr; ++f)
 	{
 		char module[PATH_MAX] = {0};
-		size_t module_len = std::min(frame-prev_frame, (std::ptrdiff_t) PATH_MAX-1);
+		size_t module_len = std::min(offset-prev_frame, (std::ptrdiff_t) PATH_MAX-1);
 		memcpy (module, prev_frame, module_len);
 		module[module_len] = '\0';
 
 		char *endptr;
-		long address = strtoul (frame+1, &endptr, 16);
-		assert (endptr <= frame+1+16);
+		long address = strtoul (offset+1, &endptr, 16);
+		assert (endptr <= offset+1+16);
 
 		long base_address = base_address_for_library (module);
 
@@ -296,8 +298,8 @@ bool CodeLocations::process_raw_location (char *location_txt, location_t * locat
 
 		location->frames.raw[f].frame = address+base_address;
 
-		prev_frame = strchr (endptr, '>') + 2;
-		frame = strchr (endptr, '!');
+		prev_frame = strchr (endptr, FRAME_MARKER) + 2;
+		offset = strchr (endptr, OFFSET_MARKER);
 	}
 
 	return true;
@@ -356,9 +358,9 @@ bool CodeLocations::readfile (const char *f, const char *fallback_allocator_name
 
 		for (char *p_current = p; p_current < &p[sb.st_size]; ++p_current)
 		{
-			if (*p_current == '!')
+			if (*p_current == OFFSET_MARKER)
 				library_address_cnt++;
-			else if (*p_current == ':')
+			else if (*p_current == LINE_MARKER)
 				source_line_cnt++;
 		}
 		if (library_address_cnt > 0 && source_line_cnt == 0)
@@ -385,7 +387,7 @@ bool CodeLocations::readfile (const char *f, const char *fallback_allocator_name
 			p_current = strchr (p_current, '\n'), prevEOL = p_current + 1)
 	{
 		// Are there locations -- identified by @ presence
-		char *nextAT = strchr (p_current + 1, '@');
+		char *nextAT = strchr (p_current + 1, ALLOCATOR_MARKER);
 		if (nextAT == nullptr)
 			// No more locations
 			break;
@@ -405,7 +407,8 @@ bool CodeLocations::readfile (const char *f, const char *fallback_allocator_name
 			continue;
 		}
 
-		_locations = (location_t*) _af.realloc (_locations, sizeof(location_t)*(_nlocations+1));
+		_locations = (location_t*) _af.realloc (_locations, sizeof(location_t[_nlocations+1]));
+		memset (&_locations[_nlocations], 0, sizeof(location_t));
 
 		// Process source location and see if it is correctly processed (and not ignored).
 		if (options.sourceFrames() &&
@@ -438,7 +441,6 @@ bool CodeLocations::readfile (const char *f, const char *fallback_allocator_name
 
 		_min_nframes = std::min(_min_nframes, _locations[_nlocations].nframes);
 		_max_nframes = std::max(_max_nframes, _locations[_nlocations].nframes);
-		memset (&_locations[_nlocations].stats, 0, sizeof(location_stats_t));
 		_locations[_nlocations].id = _nlocations+1;
 		_nlocations++;
 	}
