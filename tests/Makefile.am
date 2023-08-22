@@ -11,7 +11,8 @@ TESTS = malloc+free \
 	multiple-tests \
 	realloc \
 	posix_memalign+realloc \
-	malloc+realloc
+	malloc+realloc \
+	h2m-malloc+free
 
 bin_PROGRAMS = $(TESTS)
 
@@ -20,7 +21,7 @@ libtester_la_SOURCES = libtester.c libtester.h
 malloc_free_libtester_LDADD = libtester.la
 
 testlocationsdir = $(datadir)
-testlocations_DATA = malloc+free-libtester-locations  malloc+free-locations
+testlocations_DATA = malloc+free-libtester-locations  malloc+free-locations h2m-malloc+free-locations
 
 basememoryconfigurationdir = $(datadir)
 basememoryconfiguration_DATA = base-memory-configuration

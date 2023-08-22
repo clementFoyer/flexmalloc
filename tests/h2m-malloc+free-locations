@@ -1,0 +1,7 @@
+# Memory configuration with size 0 bytes on allocator posix
+# This is an example. The format is, one line per call-stack, on each line the complete call-stack
+# e.g. file1.c:line1 > file2.c:line2 > file3.c:line3 ... > fileN.c:lineN
+h2m-malloc+free.c:8 @ h2m/large_cap
+h2m-malloc+free.c:11 @ h2m/bandwidth
+h2m-malloc+free.c:14 @ h2m/latency
+

@@ -1,2 +1,8 @@
 # Memory configuration for allocator posix
 Size 4096 MBytes
+# Memory configuration for allocator h2m/bandwidth
+Size 4096 MBytes
+# Memory configuration for allocator h2m/latency
+Size 4096 MBytes
+# Memory configuration for allocator h2m/large_cap
+Size 4096 MBytes
