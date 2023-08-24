@@ -36,7 +36,9 @@ posix_memalign_realloc_CFLAGS = -g -O0
 malloc_realloc_SOURCES = malloc+realloc.c
 malloc_realloc_CFLAGS = -g -O0
 
-install-data-hook:
-	$(mkdir_p) $(datadir)
-	cp $(srcdir)/*-locations $(srcdir)/base-memory-configuration $(datadir)
+testlocationsdir = $(datadir)
+testlocations_DATA = malloc+free-libtester-locations  malloc+free-locations
+
+basememoryconfigurationdir = $(datadir)
+basememoryconfiguration_DATA = base-memory-configuration
 

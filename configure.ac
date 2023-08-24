@@ -4,6 +4,8 @@ AM_SILENT_RULES([yes])
 
 AC_CONFIG_HEADERS([flexmalloc-config.h])
 
+AC_CONFIG_FILES([scripts/flexmalloc.sh scripts/count.sh])
+
 LT_INIT([dlopen,shared,pic,disable-static])
 
 AC_PROG_CC
