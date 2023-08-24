@@ -44,6 +44,15 @@ libflexmalloc_dbg_la_CXXFLAGS  += -I$(PMDK_HOME)/include
 libflexmalloc_dbg_la_LDFLAGS   += -L$(PMDK_HOME)/lib -lpmem -R $(PMDK_HOME)/lib
 endif
 
+if HAVE_H2M
+libflexmalloc_la_SOURCES       += \
+ allocator-h2m.cxx allocator-h2m.hxx
+libflexmalloc_la_CXXFLAGS      += -I$(H2M_HOME)/include
+libflexmalloc_la_LDFLAGS       += -L$(H2M_HOME)/lib -lh2m -R $(H2M_HOME)/lib
+libflexmalloc_dbg_la_CXXFLAGS  += -I$(H2M_HOME)/include
+libflexmalloc_dbg_la_LDFLAGS   += -L$(H2M_HOME)/lib -lh2m -R $(H2M_HOME)/lib
+endif
+
 libcounter_la_SOURCES          = counter.cxx
 libcounter_la_CXXFLAGS         = -O3 -DNDEBUG -Wall -Wextra -std=c++11
 libcounter_la_LDFLAGS          = -DNDEBUG -ldl

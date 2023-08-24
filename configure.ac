@@ -144,6 +144,36 @@ AC_LINK_IFELSE([AC_LANG_PROGRAM([[
 CPPFLAGS=$CPPFLAGS_saved
 LIBS=$LIBS_saved
 
+AC_ARG_WITH([h2m],
+	[AS_HELP_STRING([--with-h2m=DIR],
+		[Support for h2m installed in DIR @<:@default=no@:>@])],
+	[# default search path is "/usr"
+	 AS_IF([test x"${with_h2m}" = x -o x"${with_h2m}" = xyes], [with_h2m="/usr"])
+	],
+	[with_h2m="no"])
+AS_IF([test "${with_h2m}" != "no"],
+	[CPPFLAGS_saved=$CPPFLAGS
+	 LIBS_saved=$LIBS
+	 H2M_HOME="${with_h2m}"
+	 CPPFLAGS="-I${H2M_HOME}/include"
+	 LIBS="-L${H2M_HOME}/lib -lh2m"
+	 AC_LANG_PUSH([C++])
+	 AC_CHECK_LIB([h2m], [h2m_init],
+		[AC_CHECK_HEADER([h2m.h],
+			[H2M_SUPPORT="yes"
+			 AC_DEFINE([H2M_SUPPORTED], [1], [Defined if Memkind is available])
+			 AC_SUBST(H2M_HOME)
+			],
+			[AC_MSG_FAILURE([Cannot find h2m.h within given memkind DIR])])
+		],
+		[AC_MSG_FAILURE([Cannot find libh2m.so within given memkind DIR])])
+	 AC_LANG_POP([C++])
+	])
+CPPFLAGS=$CPPFLAGS_saved
+LIBS=$LIBS_saved
+
+AM_CONDITIONAL([HAVE_H2M], [test "${H2M_SUPPORT}" = "yes"])
+
 AC_CHECK_HEADERS([ \
  assert.h \
  bfd.h \

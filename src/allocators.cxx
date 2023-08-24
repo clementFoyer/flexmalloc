@@ -18,15 +18,26 @@
 
 #include "allocators.hxx"
 #include "allocator-posix.hxx"
-#if defined(MEMKIND_SUPPORTED)
+#if defined(MEMKIND_SUPPORTED) && MEMKIND_SUPPORTED
 # include "allocator-memkind-hbwmalloc.hxx"
 # include "allocator-memkind-pmem.hxx"
+#endif
+#if defined(H2M_SUPPORTED) && H2M_SUPPORTED
+# include "allocator-h2m.hxx"
 #endif
 
 Allocators::Allocators (allocation_functions_t &af, const char *definitions)
 {
 	unsigned indx = 0;
-#if defined(MEMKIND_SUPPORTED)
+#if defined(H2M_SUPPORTED) && H2M_SUPPORTED
+	void *a_h2m_bw = malloc (sizeof(AllocatorH2mAllocBandwidth));
+	void *a_h2m_lat = malloc (sizeof(AllocatorH2mAllocLatency));
+	void *a_h2m_largecap = malloc (sizeof(AllocatorH2mAllocLargeCap));
+	allocators[indx++] = new (a_h2m_bw) AllocatorH2mAllocBandwidth(af);
+	allocators[indx++] = new (a_h2m_lat) AllocatorH2mAllocLatency(af);
+	allocators[indx++] = new (a_h2m_largecap) AllocatorH2mAllocLargeCap(af);
+#endif
+#if defined(MEMKIND_SUPPORTED) && MEMKIND_SUPPORTED
 	void *a_memkind_hbwmalloc = (AllocatorMemkindHBWMalloc*) malloc (sizeof(AllocatorMemkindHBWMalloc));
 	void *a_memkind_pmem = (AllocatorMemkindPMEM*) malloc (sizeof(AllocatorMemkindPMEM));
 	allocators[indx++] = new (a_memkind_hbwmalloc) AllocatorMemkindHBWMalloc(af);

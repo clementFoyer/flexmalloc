@@ -9,11 +9,19 @@
 #include "allocator-statistics.hxx"
 #include "allocator.hxx"
 
-#if defined(MEMKIND_SUPPORTED)
-# define NUM_ALLOCATORS 3
+// Ajust number of allocators to the number supported external libraries
+#if defined(MEMKIND_SUPPORTED) && MEMKIND_SUPPORTED
+# define MEMKIND_ALLOCATORS 2
 #else
-# define NUM_ALLOCATORS 1
+# define MEMKIND_ALLOCATORS 0
 #endif
+#if defined(H2M_SUPPORTED) && H2M_SUPPORTED
+# define H2M_ALLOCATORS 3
+#else
+# define H2M_ALLOCATORS 0
+#endif
+
+#define NUM_ALLOCATORS (1+MEMKIND_ALLOCATORS+H2M_ALLOCATORS)
 
 class Allocators
 {
