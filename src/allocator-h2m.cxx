@@ -5,6 +5,8 @@
 
 #include <stdlib.h>
 #include <h2m.h>
+#include <h2m_tools.h>
+#include <h2m_common.h>
 #include <assert.h>
 #include <string.h>
 #include <errno.h>
@@ -25,6 +27,7 @@ AllocatorH2mAlloc::AllocatorH2mAlloc (allocation_functions_t &af)
 	int any_loc = h2m_atv_mem_space_hbw | h2m_atv_mem_space_low_lat | h2m_atv_mem_space_large_cap;
 	_traits[0] = { h2m_atk_req_mem_space, any_loc };
 	_traits[1] = { h2m_atk_mem_alignment, 1 };
+	usage_info = h2m_get_capacity_usage_info();
 }
 
 AllocatorH2mAllocBandwidth::AllocatorH2mAllocBandwidth (allocation_functions_t &af)
@@ -248,16 +251,19 @@ struct allocator_fn_wrapper {
 			{
 				if (strncmp (pEnd, MEMORYCONFIG_MBYTES_SUFFIX, strlen(MEMORYCONFIG_MBYTES_SUFFIX)) == 0)
 				{
-					size_t s;
+					size_t s = ((size_t) s_size) << 20;
 					if (s_size < 0)
 					{
 						VERBOSE_MSG(1, "%s: Invalid given size.\n", allocator_fn_wrapper::name());
 						exit (1);
 					}
-					else
-						s = s_size;
-					VERBOSE_MSG(1, "%s: Setting up size %lu MBytes.\n", allocator_fn_wrapper::name(), s);
-					alloc.size (s << 20);
+					else if (s > alloc.size())
+					{
+						VERBOSE_MSG(1, "%s: Invalid given size, it cannot exceed the memory available (%zu MiB)\n", allocator_fn_wrapper::name(), alloc.size() >> 20);
+						exit (1);
+					}
+					VERBOSE_MSG(1, "%s: Setting up size %lld MBytes.\n", allocator_fn_wrapper::name(), s_size);
+					alloc.size (s);
 				}
 				else
 				{
@@ -273,9 +279,8 @@ struct allocator_fn_wrapper {
 		}
 		else
 		{
-			VERBOSE_MSG(0, "%s: Wrong configuration for the allocator. Available options include:\n"
-					" Size <NUM> MBytes\n", allocator_name);
-			exit (1);
+			// No need to configure anything.
+			// The configuration line may be used to restrict the available memory.
 		}
 	}
 
@@ -293,6 +298,7 @@ struct allocator_fn_wrapper {
 inline namespace { constexpr char bw_alloc_name[] = BW_NAME; }
 void AllocatorH2mAllocBandwidth::configure (const char* config)
 {
+	size (usage_info.max_mem_cap_bytes_hbw);
 	allocator_fn_wrapper<bw_alloc_name>::configure (*this, config);
 	_is_ready = true;
 }
@@ -308,6 +314,7 @@ const char * AllocatorH2mAllocBandwidth::description (void) const
 inline namespace { constexpr char lat_alloc_name[] = LAT_NAME; }
 void AllocatorH2mAllocLatency::configure (const char* config)
 {
+	size (usage_info.max_mem_cap_bytes_low_lat);
 	allocator_fn_wrapper<lat_alloc_name>::configure (*this, config);
 	_is_ready = true;
 }
@@ -323,6 +330,7 @@ const char * AllocatorH2mAllocLatency::description (void) const
 inline namespace { constexpr char large_cap_alloc_name[] = LARGE_CAP_NAME; }
 void AllocatorH2mAllocLargeCap::configure (const char* config)
 {
+	size (usage_info.max_mem_cap_bytes_large_cap);
 	allocator_fn_wrapper<large_cap_alloc_name>::configure (*this, config);
 	_is_ready = true;
 }

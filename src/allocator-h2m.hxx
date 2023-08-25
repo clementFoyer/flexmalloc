@@ -7,11 +7,13 @@
 
 #include "statistics-recorder-allocator.hxx"
 #include <h2m.h>
+#include <h2m_tools.h>
 
 class AllocatorH2mAlloc : public StatisticsRecorderAllocator
 {
 	protected:
 	static constexpr size_t N_TRAITS = 2;
+	h2m_capacity_usage_info_t usage_info;
 
 	private:
 	h2m_alloc_trait_t _traits[N_TRAITS];	// Placement + potential alignment
