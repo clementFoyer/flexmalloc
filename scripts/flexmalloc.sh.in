@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FLEXMALLOC_HOME=@__sub_FLEXMALLOC_HOME__@
+FLEXMALLOC_HOME=@prefix@
 
 library=libflexmalloc
 if [[ ${FLEXMALLOC_DEBUG} == "1" ]] || [[ ${FLEXMALLOC_DEBUG} == "enabled" ]] || [[ ${FLEXMALLOC_DEBUG} == "yes" ]] ; then
@@ -33,7 +33,7 @@ if [[ "${PMI_RANK}" == "0" || "${PMI_RANK}" == "" ]] ; then
 		export FLEXMALLOC_VERBOSE=1
 	fi
 	LD_PRELOAD=${FLEXMALLOC_HOME}/lib/${library}.so ${@:3}
-else 
+else
 	export FLEXMALLOC_DEBUG=no
 	export FLEXMALLOC_VERBOSE=0
 	LD_PRELOAD=${FLEXMALLOC_HOME}/lib/${library}.so ${@:3} > /dev/null 2> /dev/null
